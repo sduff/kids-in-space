@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html>
+<head>
+   <script src="phaser.min.js"></script>
+   <style>
+   html, body {
+      margin: 0;
+      padding: 0;
+   }
+   </style>
+</head>
+<body>
+    <script>
+    var config = {
+        type: Phaser.AUTO,
+        width: window.innerWidth,
+        height: window.innerHeight,
+        physics: {
+            default: 'arcade',
+            arcade: {
+                gravity: { y: 200 }
+            }
+        },
+        scene: {
+            preload: preload,
+            create: create,
+            update: update
+        }
+    };
+
+   console.log("pre phaser");
+    var game = new Phaser.Game(config);
+
+   function preload ()
+   {
+      this.load.image('enemy', 'assets/enemy.png');
+   }
+
+   function create ()
+   {
+        this.points = [];
+        this.stars = this.add.group();
+        this.maxDepth = 32;
+
+        for (var i = 0; i < 512; i++) {
+            this.points.push({
+                x: Phaser.Math.Between(-25, 25),
+                y: Phaser.Math.Between(-25, 25),
+                z: Phaser.Math.Between(1, this.maxDepth)
+            });
+        }
+
+//            var utterance = new SpeechSynthesisUtterance("Christian, Daddy loves you the most. And mommy has a sexy body");
+//            speechSynthesis.speak(utterance);
+
+      this.add.image(this.game.config.width/2, this.game.config.height/4 , 'enemy');
+
+    timedEvent = this.time.addEvent({ delay: 500, callback: do_xhr, callbackScope: this, loop: true });
+   }
+
+   function do_xhr() {
+      // if xhr is running pass
+   }
+
+   var state = [];
+   var xhr = new XMLHttpRequest();
+   xhr.addEventListener("load", xhr_load);
+   xhr.addEventListener("error", xhr_error);
+   xhr.addEventListener("abort", xhr_abort);
+
+   function xhr_load(e) {
+      state["xhr"] = "load";
+      state["xhr_e"] = e;
+      console.log(e);
+      console.log(xhr.response);
+   }
+
+   function xhr_error(e) {
+      state["xhr"] = "error";
+      state["xhr_e"] = e;
+   }
+
+   function xhr_abort(e) {
+      state["xhr"] = "abort";
+      state["xhr_e"] = e;
+   }
+
+   state["xhr"] = "first_run";
+
+   function update  ()
+   {
+        this.stars.clear(true, true);
+        for (var i = 0; i < this.points.length; i++) {
+            var point = this.points[i];
+
+            point.z -= 0.1;
+
+            if (point.z <= 0) {
+                point.x = Phaser.Math.Between(-25, 25);
+                point.y = Phaser.Math.Between(-25, 25);
+                point.z = this.maxDepth;
+            }
+
+            var px = point.x * (128 / point.z) + (this.game.config.width * 0.5);
+            var py = point.y * (128 / point.z) + (this.game.config.height * 0.5);
+
+            var circle = new Phaser.Geom.Circle(
+                px,
+                py,
+                (1 - point.z / 32) * 2
+            );
+
+            var graphics = this.add.graphics({ fillStyle: { color: 0xffffff } });
+            graphics.setAlpha((1 - point.z / 32));
+            graphics.fillCircleShape(circle);
+            this.stars.add(graphics);
+        }
+/*
+         if (state["xhr"] != "waiting") {
+            // something happened
+            // sync state
+            // fire off a new request
+            state["xhr"] = "waiting";
+            xhr.open("GET", "http://localhost:8000/toggle");
+            xhr.responseType = "json";
+            xhr.send();
+            console.log(state["xhr"]);
+         }
+*/
+//         console.log("tick");
+   }
+
+    </script>
+</body>
+</html>

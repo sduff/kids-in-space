@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Tricorder</title>
+<script src="html5-qrcode.min.js"></script>
+</head>
+<body>
+<div id="reader" style="width: 100%;height: 100%; border: 1px solid #f00; margin: 0; padding:0;"></div>
+<div id="found" style="width: 100%; height: 100%; border: 1px solid #0f0; display: none; position: absolute; top:0; left: 0; z-index:10; margin:auto; padding:0;"><p style="margin:auto; text-align:center;"><span id="message"></span><br/><img src="scanner.png" onclick="startScanner();"></p></div>
+<script>
+var lastFound = "";
+
+const html5QrCode = new Html5Qrcode("reader");
+const qrCodeSuccessCallback = (decodedText, decodedResult) => {
+   if (lastFound != decodedText) {
+      lastFound = decodedText;
+      // and get an appropriate response
+      var oReq = new XMLHttpRequest();
+      var url = "data/"+(decodedText.toLowerCase())+".json";
+      oReq.open("GET", url);
+      oReq.responseType = 'json';
+      oReq.onload = function(e) {
+         if (this.status == 200) {
+            console.log(this.response);
+            var say = this.response['say'];
+            var show = this.response['show'];
+            if (say==undefined) {
+               say="Sorry, I don't know what that is. Keep looking!";
+               show="<img src='unknown.png'><br>Sorry, I'm not sure what that is. Keep looking!";
+            }
+            document.getElementById("message").innerHTML = show;
+            var utterance = new SpeechSynthesisUtterance(say);
+            utterance.lang = "en-AU";  // I want my child to learn an Aussie accent!
+            speechSynthesis.speak(utterance);
+            utterance.onend = function(e) {
+            }
+         }
+      };
+      oReq.send();
+      // Stop the scanner while we wait for the XMLHTTPReques to return
+      html5QrCode.stop();
+
+      // show the analyser graphic
+      document.getElementById("found").style.display = "inline";
+   }
+};
+const config = {
+   fps: 10
+};
+
+function startScanner() {
+    // start scanning again
+    html5QrCode.start({ facingMode: "environment" }, config, qrCodeSuccessCallback);
+    document.getElementById("found").style.display = "none";
+    lastFound = "";
+}
+
+// environment is to prefer the read-facing camera
+html5QrCode.start({ facingMode: "environment" }, config, qrCodeSuccessCallback);
+
+</script>
+<script
+</body>
+</html>
